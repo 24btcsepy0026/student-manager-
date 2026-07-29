@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Student Manager</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', sans-serif;
+      background: #f0f4f8;
+      color: #2d3748;
+      min-height: 100vh;
+    }
+
+    header {
+      background: #4f46e5;
+      color: white;
+      padding: 1.25rem 2rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+    }
+
+    header h1 { font-size: 1.5rem; font-weight: 600; }
+
+    .container {
+      max-width: 900px;
+      margin: 2rem auto;
+      padding: 0 1rem;
+    }
+
+    /* ── Card ── */
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 1.5rem;
+      box-shadow: 0 1px 4px rgba(0,0,0,0.08);
+      margin-bottom: 2rem;
+    }
+
+    .card h2 {
+      font-size: 1.1rem;
+      font-weight: 600;
+      margin-bottom: 1rem;
+      color: #4f46e5;
+    }
+
+    /* ── Form ── */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 0.75rem 1rem;
+    }
+
+    .form-grid label {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: #4a5568;
+    }
+
+    .form-grid input {
+      padding: 0.5rem 0.75rem;
+      border: 1px solid #cbd5e0;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      transition: border-color 0.2s;
+      outline: none;
+    }
+
+    .form-grid input:focus { border-color: #4f46e5; }
+
+    .form-actions {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+
+    /* ── Buttons ── */
+    .btn {
+      padding: 0.5rem 1.25rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: opacity 0.15s, transform 0.1s;
+    }
+
+    .btn:active { transform: scale(0.97); }
+    .btn:hover  { opacity: 0.88; }
+
+    .btn-primary  { background: #4f46e5; color: white; }
+    .btn-secondary{ background: #e2e8f0; color: #4a5568; }
+    .btn-edit     { background: #eef2ff; color: #4f46e5; font-size: 0.8rem; padding: 0.3rem 0.7rem; }
+    .btn-delete   { background: #fff5f5; color: #e53e3e; font-size: 0.8rem; padding: 0.3rem 0.7rem; }
+
+    /* ── Toast ── */
+    #toast {
+      position: fixed;
+      bottom: 1.5rem;
+      right: 1.5rem;
+      background: #2d3748;
+      color: white;
+      padding: 0.75rem 1.25rem;
+      border-radius: 8px;
+      font-size: 0.9rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+      z-index: 999;
+    }
+
+    #toast.show { opacity: 1; }
+    #toast.success { background: #38a169; }
+    #toast.error   { background: #e53e3e; }
+
+    /* ── Search bar ── */
+    .search-row {
+      display: flex;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+      align-items: center;
+    }
+
+    .search-row input {
+      flex: 1;
+      padding: 0.5rem 0.75rem;
+      border: 1px solid #cbd5e0;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      outline: none;
+    }
+
+    .search-row input:focus { border-color: #4f46e5; }
+
+    /* ── Table ── */
+    .table-wrap { overflow-x: auto; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+    }
+
+    thead { background: #eef2ff; }
+    thead th {
+      text-align: left;
+      padding: 0.75rem 1rem;
+      font-weight: 600;
+      color: #4f46e5;
+      white-space: nowrap;
+    }
+
+    tbody tr { border-bottom: 1px solid #f0f4f8; transition: background 0.15s; }
+    tbody tr:hover { background: #fafbff; }
+
+    tbody td { padding: 0.75rem 1rem; }
+
+    .actions-cell { display: flex; gap: 0.4rem; }
+
+    .empty-state {
+      text-align: center;
+      padding: 2.5rem;
+      color: #a0aec0;
+      font-size: 0.95rem;
+    }
+
+    .badge {
+      display: inline-block;
+      background: #eef2ff;
+      color: #4f46e5;
+      border-radius: 999px;
+      padding: 0.15rem 0.65rem;
+      font-size: 0.78rem;
+      font-weight: 500;
+    }
+
+    @media (max-width: 600px) {
+      .form-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<header>
+  <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="white" stroke-width="2">
+    <path stroke-linecap="round" stroke-linejoin="round"
+      d="M12 14l9-5-9-5-9 5 9 5zm0 0v6m0-6L3 9m9 5l9-5" />
+  </svg>
+  <h1>Student Manager</h1>
+</header>
+
+<div class="container">
+
+  <!-- Form card -->
+  <div class="card">
+    <h2 id="form-title">Add New Student</h2>
+    <form id="student-form" autocomplete="off">
+      <input type="hidden" id="edit-id" />
+      <div class="form-grid">
+        <label>
+          Name
+          <input type="text" id="name" placeholder="e.g. Riya Sharma" required />
+        </label>
+        <label>
+          Email
+          <input type="email" id="email" placeholder="e.g. riya@example.com" required />
+        </label>
+        <label>
+          Age
+          <input type="number" id="age" placeholder="e.g. 20" min="1" max="120" required />
+        </label>
+        <label>
+          Course
+          <input type="text" id="course" placeholder="e.g. Computer Science" required />
+        </label>
+      </div>
+      <div class="form-actions">
+        <button type="submit" class="btn btn-primary" id="submit-btn">Add Student</button>
+        <button type="button" class="btn btn-secondary" id="cancel-btn" style="display:none">Cancel</button>
+      </div>
+    </form>
+  </div>
+
+  <!-- Students list card -->
+  <div class="card">
+    <h2>All Students</h2>
+    <div class="search-row">
+      <input type="text" id="search" placeholder="Search by name, email, or course…" />
+      <button class="btn btn-secondary" onclick="loadStudents()">↻ Refresh</button>
+    </div>
+    <div class="table-wrap">
+      <table>
+        <thead>
+          <tr>
+            <th>#</th>
+            <th>Name</th>
+            <th>Email</th>
+            <th>Age</th>
+            <th>Course</th>
+            <th>Actions</th>
+          </tr>
+        </thead>
+        <tbody id="students-body">
+          <tr><td colspan="6" class="empty-state">Loading…</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<div id="toast"></div>
+
+<script>
+  const API = 'http://127.0.0.1:8000';
+
+  let allStudents = [];
+
+  // ── Toast helper ──────────────────────────────────────────────
+  function showToast(msg, type = 'success') {
+    const t = document.getElementById('toast');
+    t.textContent = msg;
+    t.className = `show ${type}`;
+    setTimeout(() => { t.className = ''; }, 3000);
+  }
+
+  // ── Load all students ─────────────────────────────────────────
+  async function loadStudents() {
+    try {
+      const res = await fetch(`${API}/students/`);
+      if (!res.ok) throw new Error('Failed to fetch');
+      allStudents = await res.json();
+      renderTable(allStudents);
+    } catch (e) {
+      showToast('Could not connect to the API. Is the server running?', 'error');
+      document.getElementById('students-body').innerHTML =
+        '<tr><td colspan="6" class="empty-state">Failed to load data.</td></tr>';
+    }
+  }
+
+  // ── Render table ──────────────────────────────────────────────
+  function renderTable(students) {
+    const tbody = document.getElementById('students-body');
+    if (students.length === 0) {
+      tbody.innerHTML = '<tr><td colspan="6" class="empty-state">No students found.</td></tr>';
+      return;
+    }
+    tbody.innerHTML = students.map(s => `
+      <tr>
+        <td>${s.id}</td>
+        <td><strong>${escHtml(s.name)}</strong></td>
+        <td>${escHtml(s.email)}</td>
+        <td>${s.age}</td>
+        <td><span class="badge">${escHtml(s.course)}</span></td>
+        <td class="actions-cell">
+          <button class="btn btn-edit" onclick="editStudent(${s.id})">Edit</button>
+          <button class="btn btn-delete" onclick="deleteStudent(${s.id}, '${escHtml(s.name)}')">Delete</button>
+        </td>
+      </tr>
+    `).join('');
+  }
+
+  // ── Client-side search ────────────────────────────────────────
+  document.getElementById('search').addEventListener('input', function () {
+    const q = this.value.toLowerCase();
+    const filtered = allStudents.filter(s =>
+      s.name.toLowerCase().includes(q) ||
+      s.email.toLowerCase().includes(q) ||
+      s.course.toLowerCase().includes(q)
+    );
+    renderTable(filtered);
+  });
+
+  // ── Submit (create or update) ─────────────────────────────────
+  document.getElementById('student-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const id      = document.getElementById('edit-id').value;
+    const payload = {
+      name:   document.getElementById('name').value.trim(),
+      email:  document.getElementById('email').value.trim(),
+      age:    parseInt(document.getElementById('age').value),
+      course: document.getElementById('course').value.trim(),
+    };
+
+    try {
+      let res;
+      if (id) {
+        res = await fetch(`${API}/students/${id}`, {
+          method:  'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify(payload),
+        });
+      } else {
+        res = await fetch(`${API}/students/`, {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body:    JSON.stringify(payload),
+        });
+      }
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.detail || 'Request failed');
+      }
+
+      showToast(id ? 'Student updated!' : 'Student added!');
+      resetForm();
+      loadStudents();
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  });
+
+  // ── Edit ──────────────────────────────────────────────────────
+  async function editStudent(id) {
+    try {
+      const res = await fetch(`${API}/students/${id}`);
+      if (!res.ok) throw new Error('Not found');
+      const s = await res.json();
+
+      document.getElementById('edit-id').value  = s.id;
+      document.getElementById('name').value     = s.name;
+      document.getElementById('email').value    = s.email;
+      document.getElementById('age').value      = s.age;
+      document.getElementById('course').value   = s.course;
+
+      document.getElementById('form-title').textContent = 'Edit Student';
+      document.getElementById('submit-btn').textContent = 'Update Student';
+      document.getElementById('cancel-btn').style.display = 'inline-block';
+
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    } catch (err) {
+      showToast('Could not load student data.', 'error');
+    }
+  }
+
+  // ── Delete ────────────────────────────────────────────────────
+  async function deleteStudent(id, name) {
+    if (!confirm(`Delete "${name}"? This cannot be undone.`)) return;
+    try {
+      const res = await fetch(`${API}/students/${id}`, { method: 'DELETE' });
+      if (!res.ok) throw new Error('Delete failed');
+      showToast(`"${name}" deleted.`);
+      loadStudents();
+    } catch (err) {
+      showToast(err.message, 'error');
+    }
+  }
+
+  // ── Cancel edit ───────────────────────────────────────────────
+  document.getElementById('cancel-btn').addEventListener('click', resetForm);
+
+  function resetForm() {
+    document.getElementById('student-form').reset();
+    document.getElementById('edit-id').value            = '';
+    document.getElementById('form-title').textContent   = 'Add New Student';
+    document.getElementById('submit-btn').textContent   = 'Add Student';
+    document.getElementById('cancel-btn').style.display = 'none';
+  }
+
+  // ── Utility ───────────────────────────────────────────────────
+  function escHtml(str) {
+    return String(str)
+      .replace(/&/g, '&amp;')
+      .replace(/</g, '&lt;')
+      .replace(/>/g, '&gt;')
+      .replace(/"/g, '&quot;');
+  }
+
+  // ── Init ──────────────────────────────────────────────────────
+  loadStudents();
+</script>
+</body>
+</html>
