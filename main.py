@@ -21,9 +21,9 @@ app.add_middleware(
 
 BASE_DIR = Path(__file__).resolve().parent
 
-@app.get("/", response_class=FileResponse)
+@app.get("/")
 def read_index():
-    return BASE_DIR / "index.html"
+    return FileResponse(BASE_DIR / "index.html")
 
 
 def get_db():
