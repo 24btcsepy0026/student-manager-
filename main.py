@@ -1,3 +1,4 @@
+from typing import List
 from fastapi import FastAPI, Depends, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import FileResponse
@@ -38,7 +39,7 @@ def create_student(student: schemas.StudentCreate, db: Session = Depends(get_db)
     db_student = crud.create_student(db, student)
     return db_student
 
-@app.get("/students/", response_model=list[schemas.StudentResponse])
+@app.get("/students/", response_model=List[schemas.StudentResponse])
 def read_all(db: Session = Depends(get_db)):
     students = crud.get_students(db)
     return students

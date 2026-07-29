@@ -259,7 +259,7 @@
 <div id="toast"></div>
 
 <script>
-  const API = window.location.origin;
+  const API = window.location.protocol.startsWith('http') ? '' : 'http://127.0.0.1:8000';
 
   let allStudents = [];
 
@@ -268,20 +268,21 @@
     const t = document.getElementById('toast');
     t.textContent = msg;
     t.className = `show ${type}`;
-    setTimeout(() => { t.className = ''; }, 3000);
+    setTimeout(() => { t.className = ''; }, 4000);
   }
 
   // ── Load all students ─────────────────────────────────────────
   async function loadStudents() {
     try {
       const res = await fetch(`${API}/students/`);
-      if (!res.ok) throw new Error('Failed to fetch');
+      if (!res.ok) throw new Error(`HTTP error ${res.status}: ${res.statusText}`);
       allStudents = await res.json();
       renderTable(allStudents);
     } catch (e) {
-      showToast('Could not connect to the API. Is the server running?', 'error');
+      console.error("Load students error:", e);
+      showToast(`API Connection Error: ${e.message}`, 'error');
       document.getElementById('students-body').innerHTML =
-        '<tr><td colspan="6" class="empty-state">Failed to load data.</td></tr>';
+        `<tr><td colspan="6" class="empty-state">Failed to load data (${e.message}).</td></tr>`;
     }
   }
 
